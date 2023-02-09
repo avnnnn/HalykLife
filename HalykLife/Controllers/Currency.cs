@@ -15,8 +15,14 @@ namespace HalykLife.Controllers
     [ApiController]
     public class Currency : ControllerBase
     {
-        private string _currency = "https://nationalbank.kz/rss/get_rates.cfm?fdate=";
-        private TestContext tcontext = new TestContext();
+        private readonly TestContext tcontext = new();
+        private readonly IConfiguration _configuration;
+        private string? _currency;
+        public Currency(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        
+        }
 
         /// <summary>
         ///     Метод предназначен для сохранение данных из публичного API нац. банка в локальную базу данных.
@@ -33,12 +39,13 @@ namespace HalykLife.Controllers
         [HttpGet("save/{date}")]
         public JsonResult Save(string date)
         {
+            _currency = _configuration.GetSection("Urls").GetSection("get_rates").Value;
             if (tcontext.RCurrencies.Any(x => x.ADate == DateTime.Parse(date)))
                 return new JsonResult("Данные на эту дату уже сохранены");
-            XmlElement root = getXml(_currency + date);
-            List<RCurrency> list = new List<RCurrency>();
-            DateTime ADate = Convert.ToDateTime(root["date"].InnerText);
-            foreach (XmlNode node in root.SelectNodes("item"))
+            XmlElement? root = GetXml(_currency + date);
+            List<RCurrency>? list = new();
+            DateTime ADate = Convert.ToDateTime(root?["date"]?.InnerText);
+            foreach (XmlNode node in root?.SelectNodes("item"))
             {
                 list.Add(new RCurrency()
                 {
@@ -78,7 +85,7 @@ namespace HalykLife.Controllers
         [HttpGet("{date}/{code}")]
         public JsonResult GetCurrencyOnDate(string date, string? code)
         {
-            List<RCurrency> list = new List<RCurrency>();
+            List<RCurrency> list;
             list= tcontext.RCurrencies.FromSql($"sp_GetRates @A_DATE ={DateTime.Parse(date)}, @CODE ={code}").ToList();
             return list.Count > 0 ? new JsonResult(list) : new JsonResult("Записи отсутствуют");
         }
@@ -105,15 +112,15 @@ namespace HalykLife.Controllers
         [HttpGet("{date}")]
         public JsonResult GetCurrenciesOnDate(string date)
         {
-            List<RCurrency> list = new List<RCurrency>();
+            List<RCurrency> list;
             list = tcontext.RCurrencies.FromSql($"sp_GetRates @A_DATE ={DateTime.Parse(date)}").ToList();
             return list.Count > 0 ? new JsonResult(list) : new JsonResult("Записи отсутствуют");
         }
 
-        public static XmlElement? getXml(string url)
+        public static XmlElement? GetXml(string url)
         {
-            XmlTextReader xtr = new XmlTextReader(url);
-            XmlDocument xd = new XmlDocument();
+            XmlTextReader? xtr = new(url);
+            XmlDocument xd = new();
             xd.Load(xtr);
             XmlElement? root = xd.DocumentElement;
             return root;

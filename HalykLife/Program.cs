@@ -1,3 +1,4 @@
+//kestrel по умолчанию включается в .net core и активируется в них
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
