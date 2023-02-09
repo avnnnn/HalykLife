@@ -16,6 +16,7 @@ public partial class TestContext : DbContext
 
     public virtual DbSet<RCurrency> RCurrencies { get; set; }
 
+    //Connection string вытянут из appsettings.json
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         IConfigurationRoot configuration = new ConfigurationBuilder().
