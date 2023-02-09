@@ -31,7 +31,7 @@ namespace HalykLife.Controllers
         ///     Возвращает количество сохранненых записей
         /// </returns>
         [HttpGet("save/{date}")]
-        public JsonResult save(string date)
+        public JsonResult Save(string date)
         {
             if (tcontext.RCurrencies.Any(x => x.ADate == DateTime.Parse(date)))
                 return new JsonResult("Данные на эту дату уже сохранены");
@@ -53,10 +53,8 @@ namespace HalykLife.Controllers
             return new JsonResult(list.Count);
         }
 
-
         /// <summary>
-        ///     Метод предназначен для получение данных на определенной валюты на определенную дату,
-        ///     или же всех валют на определенную дату
+        ///     Метод предназначен для получение данных определенной валюты на определенную дату,
         /// </summary>
         /// <param name="date">
         ///     Принимает в качестве параметра string, дату в формате yyyy-mm-dd
@@ -75,20 +73,41 @@ namespace HalykLife.Controllers
         ///             "value": 318.23,
         ///             "aDate": "2023-02-09T00:00:00"
         ///         }
-        ///         ...
+        ///     ]
         /// </returns>
-        [HttpGet("{date}/{code?}")]
-        public JsonResult show(string date, string? code)
+        [HttpGet("{date}/{code}")]
+        public JsonResult GetCurrencyOnDate(string date, string? code)
         {
             List<RCurrency> list = new List<RCurrency>();
-            if (code == null)
-            {       
-                list = tcontext.RCurrencies.FromSql($"sp_GetRates @A_DATE ={DateTime.Parse(date)}").ToList();
-                return list.Count > 0 ? new JsonResult(list) : new JsonResult("Записи отсутствуют");
-            }
             list= tcontext.RCurrencies.FromSql($"sp_GetRates @A_DATE ={DateTime.Parse(date)}, @CODE ={code}").ToList();
             return list.Count > 0 ? new JsonResult(list) : new JsonResult("Записи отсутствуют");
+        }
 
+        /// <summary>
+        ///     Метод предназначен для получение данных о валютах на определенную дату,
+        /// </summary>
+        /// <param name="date">
+        ///     Принимает в качестве параметра string, дату в формате yyyy-mm-dd
+        /// </param>
+        /// <returns>
+        ///     Возвращает массив записей 
+        ///     Пример
+        ///     [
+        ///         {
+        ///             "id": 40,
+        ///             "title": "АВСТРАЛИЙСКИЙ ДОЛЛАР",
+        ///             "code": "AUD",
+        ///             "value": 318.23,
+        ///             "aDate": "2023-02-09T00:00:00"
+        ///         }
+        ///         ...
+        /// </returns>        
+        [HttpGet("{date}")]
+        public JsonResult GetCurrenciesOnDate(string date)
+        {
+            List<RCurrency> list = new List<RCurrency>();
+            list = tcontext.RCurrencies.FromSql($"sp_GetRates @A_DATE ={DateTime.Parse(date)}").ToList();
+            return list.Count > 0 ? new JsonResult(list) : new JsonResult("Записи отсутствуют");
         }
 
         public static XmlElement? getXml(string url)
